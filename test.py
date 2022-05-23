@@ -2,7 +2,7 @@ from a2p import *
 
 text3 = 'She gives a well deserved raise.'
 text = 'Everyone loves my cat Puck.'
-text2 = 'The man encourages the woman, while she washes the dishes.'
+text2 = 'The woman encourages the man, while he washes the dishes.'
 sent = 'Grandma picks up some pens.'
 sent2 = 'Puck is always looking on the bright side of life.'
 sent3 = 'The man eats a sandwich.'
