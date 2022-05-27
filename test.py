@@ -1,4 +1,5 @@
 from a2p import *
+from lemminflect import getInflection, getAllInflections, getAllInflectionsOOV
 
 text3 = 'She gives a well deserved raise.'
 text = 'Everyone loves my cat Puck.'
@@ -18,14 +19,19 @@ sent11 = 'I see a cat with a telescope.'
 sent12 = 'Mary spends half of her salary on video games.'
 sent13 = 'While the car is passing by, Sara sings a beautiful song, inspired by birds.'
 sent14 = 'The wrecking ball slams the building, causing it to collapse.'
-
-# Not sure if this conjugation is right - or the rarity of the passive makes it sound strange
 sent15 = 'The buzzing fly is making noises because flies have wings.'
-
 sent16 = 'A rainbow crosses the sky.'
 sent17 = 'On the right side a car overtakes a slug.'
 sent18 = 'On the left side mom picks tomatoes from the garden.'
 sent19 = 'The cook reads the book which he bought.'
 sent20 = "The officer sends flowers to the best mother in the world."
 
-print(act2pass(sent20))
+sentX = 'A man shouts at a woman.'
+sentY = 'On the right side a car overtakes a slug.'
+sentZ = 'On the left side mom picks tomatoes from the garden.'
+sentA = 'A cat sits on a rug.'
+
+print(act2pass(sentA))
+
+for token in nlp(sentA):
+    print(token.text, token.dep_, token.tag_, token.head, list(token.subtree))
