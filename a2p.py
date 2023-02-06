@@ -128,7 +128,7 @@ def act2pass(doc, rec=False):
                     #    for w in word.subtree).strip()
                     prep_dep_list = list(w.dep_ for w in word.subtree)
                     if 'pobj' in prep_dep_list:
-                        if isinstance(verb, str) and sent[word.i-1] == verb:
+                        if not isinstance(verb, str) and sent[word.i-1] == verb:
                             prep_verbmod = word.text
                             pobj = ''.join(w.text_with_ws.lower() \
                                                if w.tag_ not in ('NNP','NNPS') and w.i != word.i else w.text_with_ws \
@@ -136,7 +136,6 @@ def act2pass(doc, rec=False):
                             for w in word.subtree:
                                 processed[w.i] = True
                         elif verb and (sent[word.i-1].dep_.endswith('obj') or sent[word.i-2].dep_.endswith('obj')):
-                            print(word.text, verb_pos, word.i, sent[word.i-1].dep_, sent[word.i-2].dep_) # TODO: check!
                             dobj += ' ' + ''.join(w.text_with_ws.lower() \
                                                       if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
                                                   for w in word.subtree).strip()
