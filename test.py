@@ -30,7 +30,22 @@ sentY = 'On the right side a car overtakes a slug.'
 sentZ = 'On the left side mom picks tomatoes from the garden.'
 sentA = 'A cat sits on a rug.'
 
-print(act2pass(sentA))
+all_sentences = [text3, text, text2, sent, sent2, sent3, sent4, sent5, all_in, sent6, sent7, sent8, sent9, sent10,
+                 sent11, sent12, sent13, sent14, sent15, sent16, sent17, sent18, sent19, sent20, sentX, sentY, sentZ,
+                 sentA]
+with open('eng-x-bible-world.txt') as f:
+    more_sentences = f.readlines()
 
-for token in nlp(sentA):
-    print(token.text, token.dep_, token.tag_, token.head, list(token.subtree))
+split_sentences = [el for lis in [s.split('.') for s in more_sentences] for el in lis]
+split_sentences = [el for lis in [s.split('?') for s in split_sentences] for el in lis]
+split_sentences = [el for lis in [s.split('!') for s in split_sentences] for el in lis]
+split_sentences = [el for lis in [s.split(';') for s in split_sentences] for el in lis]
+split_sentences = [el for el in split_sentences if '"' not in el and "\'" not in el and ',' not in el and '(' not in el and 'and' not in el]
+
+for s in all_sentences + split_sentences:
+    try:
+        print(s)
+        print(act2pass(s))
+        print('--------------')
+    except IndexError as e:
+        raise e
