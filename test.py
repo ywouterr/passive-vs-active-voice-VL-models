@@ -1,5 +1,4 @@
 from a2p import *
-from lemminflect import getInflection, getAllInflections, getAllInflectionsOOV
 
 text3 = 'She gives a well deserved raise.'
 text = 'Everyone loves my cat Puck.'

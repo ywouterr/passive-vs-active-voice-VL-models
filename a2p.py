@@ -1,11 +1,11 @@
-from more_itertools import one
-from requests import delete
 import spacy
 from inv_pronoun import nouninv
 from verb_inflector import verbPassifier
 
 nlp = spacy.load('en_core_web_sm')
 
+
+# noinspection PyUnusedLocal
 def act2pass(doc, rec=False):
     """ 
     Sentences in the active voice that meet the requirements are made passive.
@@ -25,12 +25,9 @@ def act2pass(doc, rec=False):
         subj = ''
         verb = ''
         verb_text = ''
-        verbaspect = ''
-        verbtense = ''
         adverb = {'bef':'', 'aft':''}
         part = ''
         prep1 = '' # for pcomp
-        agent = ''
         aplural_d = False
         advcltree = None
         aux = ''
@@ -56,14 +53,14 @@ def act2pass(doc, rec=False):
 
 
 
-        processed = [False for i in range(len(sent))]
+        processed = [False for _ in range(len(sent))]
 
         # Analyse dependency tree:
         for word in sent:
-            if processed[word.i] == False:
+            if not processed[word.i]:
                 if skip_some_toks and advcl_to_go > 0:
                     advcl_to_go -= 1
-                    processed[word.i] == True
+                    processed[word.i] == True # TODO: bug!!!!
                     continue
                 if word.dep_ == 'mark':
                     mark = True
@@ -71,28 +68,34 @@ def act2pass(doc, rec=False):
                         if word.head.head.dep_ in ('ROOT', 'auxpass'):
                             advcltree = word.head.subtree
                             advcl = word.head
-                            processed[word.i] == True
+                            processed[word.i] == True # TODO: bug!!!!
                             number = len(list(advcltree)) - 1
                             advcl_to_go = number # skip the rest of the subsentence
                             skip_some_toks = True
                             continue
-                if word.dep_ == 'advcl' and mark == False:
+                if word.dep_ == 'advcl' and not mark:
                     advcl = word
                     for w in word.subtree:
                         processed[w.i] = True
                 if word.dep_ == 'nsubj':
                     if not subj:
-                        subj = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()
+                        subj = ''.join(w.text_with_ws.lower() \
+                                           if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                       for w in word.subtree).strip()
                         for w in word.subtree:
                             processed[w.i] = True
                 if word.dep_ in ('advmod','npadvmod','oprd'):
                     if word.head.dep_ == 'ROOT':
                         if not verb:
-                            adverb['bef'] = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()
+                            adverb['bef'] = ''.join(w.text_with_ws.lower() \
+                                                        if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                                    for w in word.subtree).strip()
                             for w in word.subtree:
                                 processed[w.i] = True
                         else:
-                            adverb['aft'] = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()
+                            adverb['aft'] = ''.join(w.text_with_ws.lower() \
+                                                        if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                                    for w in word.subtree).strip()
                             for w in word.subtree:
                                 processed[w.i] = True
                 if word.dep_ in ('aux','auxpass','neg'):
@@ -107,38 +110,54 @@ def act2pass(doc, rec=False):
                     processed[word.i] = True
                 if word.dep_ == 'prt':
                     if word.head.dep_ == 'ROOT':
-                        part = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()
+                        part = ''.join(w.text_with_ws.lower() \
+                                           if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                       for w in word.subtree).strip()
                         for w in word.subtree:
                             processed[w.i] = True
                 if word.dep_ == 'acomp':
-                    acomp = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()            
+                    acomp = ''.join(w.text_with_ws.lower() \
+                                        if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                    for w in word.subtree).strip()
                     for w in word.subtree:
                         processed[w.i] = True
                 if word.dep_ == 'prep':
                     #if word.head.dep_ == 'ROOT':
-                    #    prep1 = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()     
+                    #    prep1 = ''.join(w.text_with_ws.lower() \
+                    #    if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                    #    for w in word.subtree).strip()
                     prep_dep_list = list(w.dep_ for w in word.subtree)
                     if 'pobj' in prep_dep_list:
-                        if type(verb) != type('str') and sent[word.i-1] == verb:
+                        if isinstance(verb, str) and sent[word.i-1] == verb:
                             prep_verbmod = word.text
-                            pobj = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') and w.i != word.i else w.text_with_ws for w in word.subtree if w.i != word.i).strip()
+                            pobj = ''.join(w.text_with_ws.lower() \
+                                               if w.tag_ not in ('NNP','NNPS') and w.i != word.i else w.text_with_ws \
+                                           for w in word.subtree if w.i != word.i).strip()
                             for w in word.subtree:
                                 processed[w.i] = True
                         elif verb and (sent[word.i-1].dep_.endswith('obj') or sent[word.i-2].dep_.endswith('obj')):
-                            print(word.text, verb_pos, word.i, sent[word.i-1].dep_, sent[word.i-2].dep_)
-                            dobj += ' ' + ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()
+                            print(word.text, verb_pos, word.i, sent[word.i-1].dep_, sent[word.i-2].dep_) # TODO: check!
+                            dobj += ' ' + ''.join(w.text_with_ws.lower() \
+                                                      if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                                  for w in word.subtree).strip()
                             for w in word.subtree:
                                 processed[w.i] = True
                         else:
-                            prep0 = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()
+                            prep0 = ''.join(w.text_with_ws.lower() \
+                                                if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                            for w in word.subtree).strip()
                             for w in word.subtree:
                                 processed[w.i] = True
                     elif 'pcomp' in prep_dep_list:
-                        prep1 = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()            
+                        prep1 = ''.join(w.text_with_ws.lower() \
+                                            if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                        for w in word.subtree).strip()
                         for w in word.subtree:
                             processed[w.i] = True
                     elif 'compound' in prep_dep_list:
-                        prep2 = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()
+                        prep2 = ''.join(w.text_with_ws.lower() \
+                                            if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                        for w in word.subtree).strip()
                         for w in word.subtree:
                             processed[w.i] = True
                 if word.dep_.endswith('obj'):
@@ -146,7 +165,11 @@ def act2pass(doc, rec=False):
                         if word.dep_ == 'dobj':
                             if not subj:
                                 break
-                            dobj = ''.join(w.text + ', ' if w.dep_=='appos' else (w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws) for w in word.subtree).strip()
+                            dobj = ''.join(w.text + ', ' \
+                                               if w.dep_=='appos' else (w.text_with_ws.lower()
+                                                                        if w.tag_ not in ('NNP','NNPS')
+                                                                        else w.text_with_ws) \
+                                           for w in word.subtree).strip()
                             aplural_d = word.tag_ in ('NNS','NNPS')
                             tree_list = list(w for w in word.subtree)
                             skip_first = True
@@ -155,20 +178,24 @@ def act2pass(doc, rec=False):
                                     if skip_first:
                                         skip_first = False
                                         continue
-                                    pobj_part = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in tok.subtree).strip()
+                                    pobj_part = ''.join(w.text_with_ws.lower() \
+                                                            if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                                        for w in tok.subtree).strip()
                                     dobj_copy = dobj
-                                    delete_pobj = True
                                     for i in range(len(pobj_part)):
                                         if pobj_part[- (1 + i)] != dobj_copy[- (1 + i)]:
-                                            delete_pobj = False
                                             break
-                                        if delete_pobj:
-                                            dobj = dobj_copy[:-len(pobj_part)-1]
+                                        dobj = dobj_copy[:-len(pobj_part)-1]
                                 if tok.dep_ == 'acl':
                                     dobj += ','
                         if word.dep_ == 'pobj':
                             if word.head.dep_ == 'ROOT':
-                                pobj = ''.join(w.text + ', ' if w.dep_=='appos' else (w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws) for w in word.subtree).strip()
+                                pobj = ''.join(w.text + ', ' \
+                                                   if w.dep_=='appos' \
+                                                   else (w.text_with_ws.lower()
+                                                         if w.tag_ not in ('NNP','NNPS')
+                                                         else w.text_with_ws) \
+                                               for w in word.subtree).strip()
                                 aplural_p = word.tag_ in ('NNS','NNPS')
                                 if word.head.dep_ == 'dative':
                                     pobj = word.head.text + ' ' + pobj
@@ -178,7 +205,9 @@ def act2pass(doc, rec=False):
                             processed[w.i] = True
                 if word.dep_ in ('xcomp','ccomp'):
                     if word.head.dep_ == 'ROOT':
-                        xcomp = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in word.subtree).strip()
+                        xcomp = ''.join(w.text_with_ws.lower() \
+                                            if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                        for w in word.subtree).strip()
                         that = xcomp.startswith('that')
                         xcomp = act2pass(xcomp, True).strip(' .')
                         if not xcomp.startswith('that') and that:
@@ -189,20 +218,23 @@ def act2pass(doc, rec=False):
                     processed[word.i] = True
                 if word.dep_ == 'cc':
                     coord = word.text
-                    if sent[word.i+1].head.tag_ in ('VB', 'VBD','VBG','VBN','VBP','VBZ','VERB') and sent[word.i+1].head.dep_ != 'ROOT':
-                        coord += ' ' + ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in sent[word.i+1].head.subtree).strip(' .')
+                    if sent[word.i+1].head.tag_ in ('VB', 'VBD','VBG','VBN','VBP','VBZ','VERB') and \
+                            sent[word.i+1].head.dep_ != 'ROOT':
+                        coord += ' ' + ''.join(w.text_with_ws.lower() \
+                                                   if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                               for w in sent[word.i+1].head.subtree).strip(' .')
                     for w in word.subtree:
-                            processed[w.i] = True
+                        processed[w.i] = True
 
 
         # exit if no SvO:
         if subj == '' and (dobj == '' or pobj == ''):
             newdoc += str(sent) + ' '
-            if rec == False:
+            if not rec:
                 print('Attention: This sentence cannot be made passive.')
-            return str(sent) 
-            
-        
+            return str(sent)
+
+
         # change tense of the verbs:
         if dobj:
             passive_voice = verbPassifier(verb, aux, aplural_d)
@@ -220,13 +252,17 @@ def act2pass(doc, rec=False):
             marker = ''
             if list(advcl.subtree)[0].dep_ == 'mark':
                 marker = list(advcl.subtree)[0].text.lower() + ' '
-                temp_advcl = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in advcl.subtree).strip()
+                temp_advcl = ''.join(w.text_with_ws.lower() \
+                                         if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                     for w in advcl.subtree).strip()
                 advcl = ''
                 for i in range(len(temp_advcl)):
                     if i >= len(marker):
                         advcl += temp_advcl[i]
             else:
-                advcl = ''.join(w.text_with_ws.lower() if w.tag_ not in ('NNP','NNPS') else w.text_with_ws for w in advcl.subtree).strip()
+                advcl = ''.join(w.text_with_ws.lower() \
+                                    if w.tag_ not in ('NNP','NNPS') else w.text_with_ws \
+                                for w in advcl.subtree).strip()
             check_on_svo = nlp(advcl)
             contains_s = False
             contains_o = False
@@ -240,15 +276,16 @@ def act2pass(doc, rec=False):
                 advcl_pass = ', ' + marker + act2pass(advcl, True).strip(' .')
             else:
                 advcl_pass = ', ' + marker + advcl
-            
+
         pobj_front = ''
         if place_bef_o or not dobj:
             pobj_front = pobj
             pobj = ''
 
-        
+
         newsent0 = ' '.join(list(filter(None, [prep0,pobj_front,dobj,adverb['bef'],aux,verb,
-            prep_verbmod,part,acomp,'by',subj,pobj_part,prep2,pobj,adverb['aft'],advcl_pass,coord,xcomp,prep1])))+punc
+                                               prep_verbmod,part,acomp,'by',subj,pobj_part,prep2,pobj,adverb['aft'],
+                                               advcl_pass,coord,xcomp,prep1])))+punc
         newsent = ''
 
 
