@@ -60,7 +60,7 @@ def act2pass(doc, rec=False):
             if not processed[word.i]:
                 if skip_some_toks and advcl_to_go > 0:
                     advcl_to_go -= 1
-                    processed[word.i] == True # TODO: bug!!!!
+                    processed[word.i] = True
                     continue
                 if word.dep_ == 'mark':
                     mark = True
@@ -68,7 +68,7 @@ def act2pass(doc, rec=False):
                         if word.head.head.dep_ in ('ROOT', 'auxpass'):
                             advcltree = word.head.subtree
                             advcl = word.head
-                            processed[word.i] == True # TODO: bug!!!!
+                            processed[word.i] = True
                             number = len(list(advcltree)) - 1
                             advcl_to_go = number # skip the rest of the subsentence
                             skip_some_toks = True
