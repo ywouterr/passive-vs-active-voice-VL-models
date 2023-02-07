@@ -6,7 +6,7 @@ nlp = spacy.load('en_core_web_sm')
 
 
 # noinspection PyUnusedLocal
-def act2pass(doc, rec=False):
+def act2pass(doc, rec=False, verbose=False) -> str:
     """ 
     Sentences in the active voice that meet the requirements are made passive.
     The requirements are:   - sentence must be of the form SvO
@@ -229,8 +229,8 @@ def act2pass(doc, rec=False):
         # exit if no SvO:
         if subj == '' and (dobj == '' or pobj == ''):
             newdoc += str(sent) + ' '
-            if not rec:
-                print('Attention: This sentence cannot be made passive.')
+            if not rec and verbose:
+                print('Warning: This sentence cannot be made passive.')
             return str(sent)
 
 
